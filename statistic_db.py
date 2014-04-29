@@ -54,8 +54,9 @@ class StatisticDB(object):
           timestamp/3600*3600 AS hour,
           COUNT(user) AS total_users,
           COUNT(distinct user) AS distinct_users,
+          COUNT(url) AS total_urls,
           COUNT(distinct url) AS distinct_urls,
-          COUNT(is_mobile) AS num_mobile
+          SUM(is_mobile) AS num_mobile
         FROM statistic
         GROUP BY hour
         """)
@@ -90,3 +91,24 @@ class StatisticDB(object):
         VALUES (?, ?, ?, ?, ?, ?)
         """, values)
     self.conn.commit()
+
+  def get_user_hourly_statistic(self, timestamp=None):
+    if timestamp:
+      return self.conn.execute(
+          """SELECT * FROM user_general_hourly WHERE hour=?""", (timestamp,))
+    return self.conn.execute(
+        """SELECT * FROM user_general_hourly ORDER BY hour DESC""")
+
+  def get_os_hourly_statistic(self, timestamp=None):
+    if timestamp:
+      return self.conn.execute(
+          """SELECT * FROM os_family_hourly WHERE hour=?""", (timestamp,))
+    return self.conn.execute(
+        """SELECT * FROM os_family_hourly ORDER BY hour DESC""")
+
+  def get_browser_hourly_statistic(self, timestamp=None):
+    if timestamp:
+      return self.conn.execute(
+          """SELECT * FROM browser_family_hourly WHERE hour=?""", (timestamp,))
+    return self.conn.execute(
+        """SELECT * FROM browser_family_hourly ORDER BY hour DESC""")

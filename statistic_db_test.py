@@ -57,5 +57,81 @@ class TestStatisticDB(unittest.TestCase):
       self.assertEqual(golden, c.fetchall())
       os.unlink(statistic_db.StatisticDB.DATABASE)
 
+    def test_get_user_hourly_statistic(self):
+      values = [
+          (1384729205, u'user1', u'url1', u'Chrome', u'Windows Vista', False),
+          (1384729285, u'user2', u'url1', u'Firefox', u'Windows XP', True)]
+      golden = [(1384729200, 2, 2, 2, 1, 1)]
+      tmp = tempfile.NamedTemporaryFile()
+      statistic_db.StatisticDB.DATABASE = tmp.name
+      tmp.close()
+      db = statistic_db.StatisticDB()
+      db.insert_user_info(values)
+      c = db.get_user_hourly_statistic()
+      self.assertEqual(golden, c.fetchall())
+      os.unlink(statistic_db.StatisticDB.DATABASE)
+
+    def test_get_os_hourly_statistic(self):
+      values = [
+          (1384729205, u'user1', u'url1', u'Chrome', u'Windows Vista', False),
+          (1384729285, u'user2', u'url1', u'Firefox', u'Windows XP', True)]
+      golden = [
+          (1384729200, 'Windows Vista', 1),
+          (1384729200, 'Windows XP', 1)]
+      tmp = tempfile.NamedTemporaryFile()
+      statistic_db.StatisticDB.DATABASE = tmp.name
+      tmp.close()
+      db = statistic_db.StatisticDB()
+      db.insert_user_info(values)
+      c = db.get_os_hourly_statistic()
+      self.assertEqual(golden, c.fetchall())
+      os.unlink(statistic_db.StatisticDB.DATABASE)
+
+    def test_get_os_hourly_statistic_with_timestamp(self):
+      values = [
+          (1384729205, u'user1', u'url1', u'Chrome', u'Windows Vista', False),
+          (1384724485, u'user2', u'url1', u'Firefox', u'Windows XP', True)]
+      golden = [
+          (1384729200, 'Windows Vista', 1)]
+      tmp = tempfile.NamedTemporaryFile()
+      statistic_db.StatisticDB.DATABASE = tmp.name
+      tmp.close()
+      db = statistic_db.StatisticDB()
+      db.insert_user_info(values)
+      c = db.get_os_hourly_statistic(1384729200)
+      self.assertEqual(golden, c.fetchall())
+      os.unlink(statistic_db.StatisticDB.DATABASE)
+
+    def test_get_browser_hourly_statistic(self):
+      values = [
+          (1384729205, u'user1', u'url1', u'Chrome', u'Windows Vista', False),
+          (1384729285, u'user2', u'url1', u'Firefox', u'Windows XP', True)]
+      golden = [
+          (1384729200, 'Chrome', 1),
+          (1384729200, 'Firefox', 1)]
+      tmp = tempfile.NamedTemporaryFile()
+      statistic_db.StatisticDB.DATABASE = tmp.name
+      tmp.close()
+      db = statistic_db.StatisticDB()
+      db.insert_user_info(values)
+      c = db.get_browser_hourly_statistic()
+      self.assertEqual(golden, c.fetchall())
+      os.unlink(statistic_db.StatisticDB.DATABASE)
+
+    def test_get_browser_hourly_statistic_with_timestamp(self):
+      values = [
+          (1384729205, u'user1', u'url1', u'Chrome', u'Windows Vista', False),
+          (1385729285, u'user2', u'url1', u'Firefox', u'Windows XP', True)]
+      golden = [
+          (1384729200, 'Chrome', 1)]
+      tmp = tempfile.NamedTemporaryFile()
+      statistic_db.StatisticDB.DATABASE = tmp.name
+      tmp.close()
+      db = statistic_db.StatisticDB()
+      db.insert_user_info(values)
+      c = db.get_browser_hourly_statistic(1384729200)
+      self.assertEqual(golden, c.fetchall())
+      os.unlink(statistic_db.StatisticDB.DATABASE)
+
 if __name__ == '__main__':
     unittest.main()
