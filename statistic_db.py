@@ -21,6 +21,7 @@ class StatisticDB(object):
     """
     self.conn = sqlite3.connect(self.DATABASE)
     self.conn.text_factory = str
+    self.conn.row_factory = sqlite3.Row
 
   def close(self):
     """Close a connection to database."""
