@@ -7,6 +7,7 @@ from user_agents import parse
 import json
 import gzip
 import get_country_city_from_latlon
+import statistic_db
 from config import config
 import os
 
@@ -19,10 +20,7 @@ def process_log_file(key, bucket):
 
   finder = get_country_city_from_latlon.LocationFinder()
 
-  conn = spatialite.connect(
-      os.path.join(config.DATA_FOLDER, config.STATISTIC_DATABASE))
-  conn.text_factory = str
-  c = conn.cursor()
+  statistic = statistic_db.StatisticDB()
 
   insert_values = []
 
@@ -60,36 +58,12 @@ def process_log_file(key, bucket):
       insert_values.append(
           (int(timestamp), user_id, url,
            user_agent.browser.family, user_agent.os.family, user_agent.is_mobile))
-  c.executemany(
-      """
-      INSERT INTO statistic(
-        timestamp, user, url, browser_family, os_family, is_mobile)
-      VALUES (?, ?, ?, ?, ?, ?)
-      """, insert_values)
-  conn.commit()
+  statistic.insert_user_info(insert_values)
 
   k = bucket.new_key(key.name.replace(config.LOG_DIR, config.PROCESSED_DIR))
   k.set_contents_from_string(out.getvalue())
   out.close()
   k.close()
   finder.close()
-  # total users, url
-  c.execute('select count(*) from statistic')
-  print c.fetchall()
-  # unique users
-  c.execute('select count(distinct user) from statistic')
-  print c.fetchall()
-  # unique url
-  c.execute('select count(distinct url) from statistic')
-  print c.fetchall()
-  # os family stats
-  c.execute('select os_family, count(os_family) from statistic group by os_family')
-  print c.fetchall()
-  # browser family stats
-  c.execute('select browser_family, count(browser_family) from statistic group by browser_family')
-  print c.fetchall()
-  # is mobile
-  c.execute('select is_mobile, count(is_mobile) from statistic group by is_mobile')
-  print c.fetchall()
-  conn.close()
+  statistic.close()
   logging.info('Finish processing %s, uploaded to %s', key.name, k.name)

@@ -17,8 +17,6 @@ def get_new_keys():
   processed_keys = {
       k.name.replace(config.PROCESSED_DIR, '')
       for k in bucket.list(prefix=config.PROCESSED_DIR)}
-  # todo: temp hack for not having delete access
-  processed_keys = []
   new_keys = []
   for key in bucket.list(prefix=config.LOG_DIR):
     if key.name.replace(config.LOG_DIR, '') not in processed_keys:

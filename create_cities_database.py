@@ -65,24 +65,6 @@ conn.commit()
 c.execute("SELECT CreateSpatialIndex('cities', 'geometry')")
 conn.close()
 
-# statistic database
-conn = spatialite.connect(
-    os.path.join(config.DATA_FOLDER, config.STATISTIC_DATABASE))
-conn.text_factory = str
-c = conn.cursor()
-# Create table
-c.execute(
-    """
-    CREATE TABLE statistic (
-        PKUID INTEGER PRIMARY KEY autoincrement,
-        timestamp INTEGER,
-        user text,
-        url text,
-        browser_family text,
-        os_family text,
-        is_mobile bool)
-    """)
-conn.close()
 # some data from somewhere....
 """
 test_data = [
