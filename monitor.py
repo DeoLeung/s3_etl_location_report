@@ -1,6 +1,5 @@
 import gzip
 import json
-import os
 from StringIO import StringIO
 import logging
 from user_agents import parse
@@ -62,7 +61,8 @@ class Monitor(object):
              record['user_agent']['os_family'],
              record['user_agent']['mobile']))
       # TODO: implement proper rollback if this fails.
-      logging.info('Inserting %d records to statistic database', len(new_records))
+      logging.info(
+          'Inserting %d records to statistic database', len(new_records))
       statistic = statistic_db.StatisticDB()
       statistic.insert_user_info(new_records)
       statistic.close()
@@ -71,3 +71,6 @@ class Monitor(object):
       service.upload(new_key, out.getvalue())
       out.close()
       logging.info('Finish processing %s, uploaded to %s', key.name, new_key)
+      # hack
+      break
+    service.close()

@@ -13,11 +13,14 @@ class TestStatisticDB(unittest.TestCase):
       tmp.close()
       db = statistic_db.StatisticDB()
       conn = db.get_connection()
+      conn.row_factory = None
       c = conn.execute(
           """
-          SELECT name FROM sqlite_master WHERE type='table' AND name='statistic'
+          SELECT name
+          FROM sqlite_master WHERE type='table' and name <> 'sqlite_sequence'
           """)
-      self.assertTrue(c.fetchall())
+      golden = ['statistic', 'reported']
+      self.assertEqual(sorted(golden), sorted(x[0] for x in c.fetchall()))
       c = conn.execute(
           """
           SELECT name FROM sqlite_master WHERE type='view'
@@ -53,6 +56,7 @@ class TestStatisticDB(unittest.TestCase):
       db = statistic_db.StatisticDB()
       db.insert_user_info(values)
       conn = db.get_connection()
+      conn.row_factory = None
       c = conn.execute("""SELECT * FROM statistic""")
       self.assertEqual(golden, c.fetchall())
       os.unlink(statistic_db.StatisticDB.DATABASE)
@@ -66,8 +70,24 @@ class TestStatisticDB(unittest.TestCase):
       statistic_db.StatisticDB.DATABASE = tmp.name
       tmp.close()
       db = statistic_db.StatisticDB()
+      db.conn.row_factory = None
       db.insert_user_info(values)
       c = db.get_user_hourly_statistic()
+      self.assertEqual(golden, c.fetchall())
+      os.unlink(statistic_db.StatisticDB.DATABASE)
+
+    def test_get_user_hourly_statistic_with_timestamp(self):
+      values = [
+          (1384729205, u'user1', u'url1', u'Chrome', u'Windows Vista', False),
+          (1384729285, u'user2', u'url1', u'Firefox', u'Windows XP', True)]
+      golden = [(1384729200, 2, 2, 2, 1, 1)]
+      tmp = tempfile.NamedTemporaryFile()
+      statistic_db.StatisticDB.DATABASE = tmp.name
+      tmp.close()
+      db = statistic_db.StatisticDB()
+      db.conn.row_factory = None
+      db.insert_user_info(values)
+      c = db.get_user_hourly_statistic(1384729200)
       self.assertEqual(golden, c.fetchall())
       os.unlink(statistic_db.StatisticDB.DATABASE)
 
@@ -82,6 +102,7 @@ class TestStatisticDB(unittest.TestCase):
       statistic_db.StatisticDB.DATABASE = tmp.name
       tmp.close()
       db = statistic_db.StatisticDB()
+      db.conn.row_factory = None
       db.insert_user_info(values)
       c = db.get_os_hourly_statistic()
       self.assertEqual(golden, c.fetchall())
@@ -97,6 +118,7 @@ class TestStatisticDB(unittest.TestCase):
       statistic_db.StatisticDB.DATABASE = tmp.name
       tmp.close()
       db = statistic_db.StatisticDB()
+      db.conn.row_factory = None
       db.insert_user_info(values)
       c = db.get_os_hourly_statistic(1384729200)
       self.assertEqual(golden, c.fetchall())
@@ -113,6 +135,7 @@ class TestStatisticDB(unittest.TestCase):
       statistic_db.StatisticDB.DATABASE = tmp.name
       tmp.close()
       db = statistic_db.StatisticDB()
+      db.conn.row_factory = None
       db.insert_user_info(values)
       c = db.get_browser_hourly_statistic()
       self.assertEqual(golden, c.fetchall())
@@ -128,9 +151,45 @@ class TestStatisticDB(unittest.TestCase):
       statistic_db.StatisticDB.DATABASE = tmp.name
       tmp.close()
       db = statistic_db.StatisticDB()
+      db.conn.row_factory = None
       db.insert_user_info(values)
       c = db.get_browser_hourly_statistic(1384729200)
       self.assertEqual(golden, c.fetchall())
+      os.unlink(statistic_db.StatisticDB.DATABASE)
+
+    def test_update_reported(self):
+      values = [
+          (1384729205, u'user1', u'url1', u'Chrome', u'Windows Vista', False),
+          (1385729285, u'user2', u'url1', u'Firefox', u'Windows XP', True)]
+      tmp = tempfile.NamedTemporaryFile()
+      statistic_db.StatisticDB.DATABASE = tmp.name
+      tmp.close()
+      db = statistic_db.StatisticDB()
+      db.conn.row_factory = None
+      db.insert_user_info(values)
+      db.update_reported(1384729200, 800)
+      result = db.get_connection().execute('SELECT * FROM reported').fetchall()
+      self.assertEqual([(1384729200, 800), ], result)
+      db.update_reported(1384729201, 799)
+      db.update_reported(1384729200, 801)
+      result = db.get_connection().execute('SELECT * FROM reported').fetchall()
+      self.assertEqual([(1384729200, 801), (1384729201, 799)], result)
+      os.unlink(statistic_db.StatisticDB.DATABASE)
+
+    def test_get_unreported_hours(self):
+      values = [
+          (1384729205, u'user1', u'url1', u'Chrome', u'Windows Vista', False),
+          (1384729205, u'user1', u'url3', u'Chrome', u'Windows Vista', False),
+          (1380000010, u'user2', u'url1', u'Firefox', u'Windows XP', True)]
+      tmp = tempfile.NamedTemporaryFile()
+      statistic_db.StatisticDB.DATABASE = tmp.name
+      tmp.close()
+      db = statistic_db.StatisticDB()
+      db.conn.row_factory = None
+      db.insert_user_info(values)
+      db.update_reported(1384729200, 1)
+      result = db.get_unreported_hours()
+      self.assertEqual([1379998800, 1384729200], result)
       os.unlink(statistic_db.StatisticDB.DATABASE)
 
 if __name__ == '__main__':

@@ -40,12 +40,18 @@ class StatisticDB(object):
         """
         CREATE TABLE statistic (
             PKUID INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp INTEGER,
+            timestamp INTEGER NOT NULL,
             user TEXT NOT NULL,
             url TEXT NOT NULL,
             browser_family TEXT NOT NULL,
             os_family TEXT NOT NULL,
             is_mobile BOOL)
+        """)
+    conn.execute(
+        """
+        CREATE TABLE reported (
+            hour INTEGER PRIMARY KEY,
+            total_users INTEGER DEFAULT 0)
         """)
     # Create views.
     conn.execute(
@@ -113,3 +119,22 @@ class StatisticDB(object):
           """SELECT * FROM browser_family_hourly WHERE hour=?""", (timestamp,))
     return self.conn.execute(
         """SELECT * FROM browser_family_hourly ORDER BY hour DESC""")
+
+  def update_reported(self, hour, total_users):
+    self.conn.execute(
+        """
+        INSERT OR REPLACE INTO reported (hour, total_users)
+        VALUES (?, ?)
+        """,
+        (hour, total_users))
+    self.conn.commit()
+
+  def get_unreported_hours(self):
+    c = self.conn.execute(
+        """
+        SELECT t1.hour
+        FROM
+          user_general_hourly AS t1 LEFT JOIN reported AS t2
+          ON t1.hour=t2.hour
+        WHERE t2.hour IS NULL or t2.total_users<>t1.total_users""")
+    return [x[0] for x in c.fetchall()]
