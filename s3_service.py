@@ -30,12 +30,17 @@ class S3Service(object):
     return new_keys
 
   def upload(self, key, content):
+    logging.info('Uploading %s', key)
     k = self.bucket.new_key(key)
     k.set_contents_from_string(content)
     k.close()
+    logging.info('Uploaded %s', key)
 
   def download(self, key):
-    return key.get_contents_as_string()
+    logging.info('Downloading %s', key.name)
+    content = key.get_contents_as_string()
+    logging.info('Downloaded %s', key.name)
+    return content
 
   def close(self):
     self.conn.close()

@@ -69,8 +69,8 @@ class Report(object):
                 ';'.join('%s,%f' % (n, f) for n, f in browser_stat)]) + '\n')
         # TODO: shall update this in one go for a whole day.
         statistic.update_reported(timestamp, result['total_users'])
-      logging.info('Finished generating report %s with %d', key, num_of_records)
+      logging.info(
+          'Finished generating report %s with %d records', key, num_of_records)
       service.upload(key, out.getvalue())
       out.close()
-      logging.info('Uploaded report to %s', key)
     service.close()

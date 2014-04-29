@@ -49,10 +49,10 @@ class Monitor(object):
   def run(self):
     service = s3_service.S3Service()
     for key in service.get_new_logs():
-      logging.info('Processing %s', key.name)
       out = StringIO()
       processed_gzip = gzip.GzipFile(fileobj=out, mode="w")
       new_records = []
+      logging.info('Processing %s', key.name)
       for record in self.extract(service.download(key)):
         processed_gzip.write(json.dumps(record) + '\n')
         new_records.append(
@@ -70,7 +70,7 @@ class Monitor(object):
       new_key = key.name.replace(config.LOG_DIR, config.PROCESSED_DIR)
       service.upload(new_key, out.getvalue())
       out.close()
-      logging.info('Finish processing %s, uploaded to %s', key.name, new_key)
+      logging.info('Finish processing %s', key.name)
       # hack
       break
     service.close()
