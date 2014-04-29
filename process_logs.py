@@ -1,15 +1,13 @@
 import gzip
+import os
 from StringIO import StringIO
-from config import config
-from pyspatialite import dbapi2 as spatialite
 import logging
 from user_agents import parse
 import json
-import gzip
-import get_country_city_from_latlon
-import statistic_db
+
 from config import config
-import os
+import location_db
+import statistic_db
 
 
 def process_log_file(key, bucket):
@@ -18,8 +16,7 @@ def process_log_file(key, bucket):
   out = StringIO()
   processed_gzip = gzip.GzipFile(fileobj=out, mode="w")
 
-  finder = get_country_city_from_latlon.LocationFinder()
-
+  location = location_db.LocationDB()
   statistic = statistic_db.StatisticDB()
 
   insert_values = []
@@ -39,7 +36,8 @@ def process_log_file(key, bucket):
                      latitude_longitude, line.strip())
         continue
       user_agent = parse(user_agent_string)
-      country, city = finder.getCountryAndCityFromLatLon(latitude, longitude)
+      country, city = location.get_country_and_city_from_lat_lon(latitude,
+                                                                 longitude)
       user_data = {
           'url': url,
           'timestamp': int(timestamp),
@@ -57,13 +55,16 @@ def process_log_file(key, bucket):
       processed_gzip.write(json.dumps(user_data) + '\n')
       insert_values.append(
           (int(timestamp), user_id, url,
-           user_agent.browser.family, user_agent.os.family, user_agent.is_mobile))
+           user_agent.browser.family,
+           user_agent.os.family,
+           user_agent.is_mobile))
+  location.close()
   statistic.insert_user_info(insert_values)
+  statistic.close()
 
   k = bucket.new_key(key.name.replace(config.LOG_DIR, config.PROCESSED_DIR))
   k.set_contents_from_string(out.getvalue())
   out.close()
   k.close()
-  finder.close()
-  statistic.close()
+
   logging.info('Finish processing %s, uploaded to %s', key.name, k.name)

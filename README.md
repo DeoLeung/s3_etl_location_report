@@ -16,10 +16,6 @@ see https://pypi.python.org/pypi/user-agents/0.2.0
 Install aws s3 python interface boto
 https://aws.amazon.com/sdkforpython/
 
-database setup:
-Run create_cities_database.py to get the city latitude longitude database set up
-and user statistic database initialised
-
 usage:
 cd directory_of_the_code
 python main.py
