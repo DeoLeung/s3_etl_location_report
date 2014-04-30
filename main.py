@@ -1,7 +1,7 @@
 import logging
+from multiprocessing import Process
+from threading import Timer
 import time
-import threading
-import sys
 
 from config import config
 import monitor
@@ -13,24 +13,26 @@ def run_repeatly(func, period):
   end = time.time()
   wait = period - (end - start)
   wait = wait if wait > 0 else 0
-  print '%s is waiting %d' % (func, wait)
-  threading.Timer(wait, run_repeatly, [func, period]).start()
+  logging.debug('%s is waiting %d', func.__name__, wait)
+  Timer(wait, run_repeatly, [func, period]).start()
 
 def main():
   logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
   monitor_s3 = monitor.Monitor()
   report_s3 = report.Report()
-  t1 = threading.Thread(
+  p1 = Process(
       target=run_repeatly, args=[monitor_s3.run, config.S3_MONITOR_TIME])
-  t2 = threading.Thread(
+  p2 = Process(
       target=run_repeatly, args=[report_s3.run, config.S3_REPORT_TIME])
-  t1.start()
-  t2.start()
-  t1.join()
-  t2.join()
+  p1.daemon = True
+  p2.daemon = True
+  p1.start()
+  p2.start()
+  p1.join()
+  p2.join()
 
 if __name__=='__main__':
   try:
     main()
   except KeyboardInterrupt:
-    pass
+    logging.info('Exit program as ctrl-c is pressed')
