@@ -68,7 +68,7 @@ class Monitor(object):
                        timestamp, line.strip())
           continue
         if not self.validate_url(url):
-          logging.warn('Error in parsing url %s in line: %s',
+          logging.warn('Invalid url %s in line: %s',
                        url, line.strip())
           continue
         try:
@@ -78,11 +78,11 @@ class Monitor(object):
                        latitude_longitude, line.strip())
           continue
         if not self.validate_latitude(latitude):
-          logging.warn('Error in parsing url %s in line: %s',
+          logging.warn('Invalid latitude %s in line: %s',
                        latitude, line.strip())
           continue
         if not self.validate_longitude(longitude):
-          logging.warn('Error in parsing url %s in line: %s',
+          logging.warn('Invalid longitude %s in line: %s',
                        longitude, line.strip())
           continue
         user_agent = parse(user_agent_string)
@@ -130,6 +130,7 @@ class Monitor(object):
       logging.info('Finish inserting records to statistic database')
       # upload the processed file to s3
       new_key = key.name.replace(config.LOG_DIR, config.PROCESSED_DIR)
+      processed_gzip.close()
       service.upload(new_key, out.getvalue())
       out.close()
       logging.info('Finish processing %s', key.name)

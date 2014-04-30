@@ -22,3 +22,6 @@ python main.py
 
 configuration:
 see config/config.py
+
+samples:
+sample processed/report files can be found under sample/

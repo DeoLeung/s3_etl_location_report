@@ -23,7 +23,7 @@ def run_repeatly(func, period):
   if wait < 0:
     # adjust to next period
     wait = period -(-wait % period)
-  logging.info('%s is waiting %d', func.__name__, wait)
+  logging.info('%s is waiting %ds', func.__name__, wait)
   t = Timer(wait, run_repeatly, [func, period])
   t.start()
   t.join()
@@ -34,9 +34,9 @@ def main():
   monitor_s3 = monitor.Monitor()
   report_s3 = report.Report()
   p1 = Process(
-      target=run_repeatly, args=[monitor_s3.run, config.S3_MONITOR_TIME])
+      target=run_repeatly, args=(monitor_s3.run, config.S3_MONITOR_TIME))
   p2 = Process(
-      target=run_repeatly, args=[report_s3.run, config.S3_REPORT_TIME])
+      target=run_repeatly, args=(report_s3.run, config.S3_REPORT_TIME))
   # Terminate them if the main program is terminated
   p1.daemon = True
   p2.daemon = True

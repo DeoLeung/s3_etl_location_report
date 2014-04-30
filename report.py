@@ -77,6 +77,7 @@ class Report(object):
         statistic.update_reported(timestamp, result['total_users'])
       logging.info(
           'Finished generating report %s with %d records', key, num_of_records)
+      report_gzip.close()
       service.upload(key, out.getvalue())
       out.close()
     statistic.close()
