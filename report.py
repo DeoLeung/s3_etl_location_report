@@ -20,7 +20,8 @@ class Report(object):
         'number of total domains',
         'browser family stats',
         'os family stats',
-        'desktop/ mobile counts and ratios')
+        'mobile counts,',
+        'desktop/ mobile ratios')
 
   def run(self):
     statistic = statistic_db.StatisticDB()
@@ -53,11 +54,14 @@ class Report(object):
                os_family['quantity'] * 1.0 / result['total_users']))
         os_stat.sort(key=lambda x: x[1], reverse=True)
         browser_stat = []
-        for browser in statistic.get_browser_hourly_statistic(result['hour']).fetchall():
+        cursor = statistic.get_browser_hourly_statistic(result['hour'])
+        for browser in cursor.fetchall():
           browser_stat.append(
               (browser['browser_family'],
                browser['quantity'] * 1.0 / result['total_users']))
         browser_stat.sort(key=lambda x: x[1], reverse=True)
+        desktop = result['total_users'] - result['num_mobile']
+        ratio = 1.0 * desktop / result['num_mobile']
         report_gzip.write(
             '\t'.join([
                 datetime.fromtimestamp(timestamp).isoformat(' '),
@@ -66,7 +70,9 @@ class Report(object):
                 str(result['distinct_urls']),
                 str(result['total_urls']),
                 ';'.join('%s,%f' % (n, f) for n, f in os_stat),
-                ';'.join('%s,%f' % (n, f) for n, f in browser_stat)]) + '\n')
+                ';'.join('%s,%f' % (n, f) for n, f in browser_stat),
+                str(result['num_mobile']),
+                str(ratio)]) + '\n')
         # TODO: shall update this in one go for a whole day.
         statistic.update_reported(timestamp, result['total_users'])
       logging.info(
