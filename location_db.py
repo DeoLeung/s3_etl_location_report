@@ -16,6 +16,12 @@ class LocationDB(object):
     self._create_database()
     self.connect()
 
+  def __enter__(self):
+    self
+
+  def __exit__(self, type, value, trackback):
+    self.close()
+
   def connect(self):
     """Open a connection to database.
 
@@ -117,16 +123,3 @@ class LocationDB(object):
       return result[1], result[0]
     else:
       return None, None
-
-
-# some data from somewhere....
-"""
-test_data = [
-('FR', 'Thomas', 45.3833, 2.5),
-('GB', 'Pelton', 54.8667, -1.6),
-('GB', 'Seaham', 54.8367, -1.3381),
-('RU', 'Ivanovo', 56.9972, 40.9714),
-('BE', 'Ensival', 50.5833, 5.85),
-('FR', 'Sommi?res', 46.2791, 0.3607),
-('GB', 'Constantine', 50.1167, -5.1667)]
-"""

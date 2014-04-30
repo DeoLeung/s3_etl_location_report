@@ -43,6 +43,17 @@ class TestStatisticDB(unittest.TestCase):
           """)
       self.assertTrue(c.fetchall())
 
+    def test_init_if_db_exists(self):
+      statistic_db.StatisticDB.DATABASE = (
+          './testdata/initial_statistic.sqlite3.db')
+      db = statistic_db.StatisticDB()
+      conn = db.get_connection()
+      c = conn.execute(
+          """
+          SELECT name FROM sqlite_master WHERE type='table' AND name='statistic'
+          """)
+      self.assertTrue(c.fetchall())
+
     def test_insert_user_info(self):
       values = [
           (1384729205, u'user1', u'url1', u'Chrome', u'Windows Vista', False),

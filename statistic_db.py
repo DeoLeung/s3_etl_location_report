@@ -14,6 +14,12 @@ class StatisticDB(object):
     self._create_database()
     self.connect()
 
+  def __enter__(self):
+    self
+
+  def __exit__(self, type, value, trackback):
+    self.close()
+
   def connect(self):
     """Open a connection to database.
 

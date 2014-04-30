@@ -28,7 +28,7 @@ class Report(object):
     for timestamp in statistic.get_unreported_hours():
       date = datetime.fromtimestamp(timestamp)
       dates.add((date.year, date.month, date.day))
-    if not timestamp:
+    if not dates:
       return
     service = s3_service.S3Service()
     for date in dates:
@@ -73,4 +73,5 @@ class Report(object):
           'Finished generating report %s with %d records', key, num_of_records)
       service.upload(key, out.getvalue())
       out.close()
+    statistic.close()
     service.close()

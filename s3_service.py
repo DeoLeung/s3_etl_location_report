@@ -18,6 +18,12 @@ class S3Service(object):
       sys.exit(1)
     logging.info('Connected to bucket: %s', config.BUCKET_NAME)
 
+  def __enter__(self):
+    self
+
+  def __exit__(self, type, value, trackback):
+    self.close()
+
   def get_new_logs(self):
     processed_keys = {
         k.name.replace(config.PROCESSED_DIR, '')
@@ -44,4 +50,5 @@ class S3Service(object):
 
   def close(self):
     self.conn.close()
+    logging.info('Closed connection with S3')
 
